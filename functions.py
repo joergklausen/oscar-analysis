@@ -33,9 +33,6 @@ def get_info(id):
 
 def plot_deployments_station(id):
 
-    with open(os.getcwd()+"/Files/File_"+id+".txt", 'w') as f:
-        f.write(str(get_info(id)))
-
     # get variables at a station
 
     observedProperties = []
@@ -43,7 +40,10 @@ def plot_deployments_station(id):
     xml = urlopen(url).read()
     soup = BeautifulSoup(xml, 'xml')
 
-    with open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt') as myFile:
+    with open(os.getcwd()+"/Files/File_"+id+".txt", 'w') as f:
+        f.write(str(get_info(id)))
+
+    with open(os.getcwd()+"/Files/File_"+id+".txt") as myFile:
         observedProperties_line = soup.find_all('observedProperty')
         observedProperties_notation = re.findall(r'\d+',str(observedProperties_line))
         observedProperties.append(observedProperties_notation)
@@ -57,7 +57,7 @@ def plot_deployments_station(id):
 
     variables_u = unique(observedProperties[0])
 
-    f=open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt')
+    f=open(os.getcwd()+"/Files/File_"+id+".txt")
     lines=f.readlines()
     all_dates = []
 

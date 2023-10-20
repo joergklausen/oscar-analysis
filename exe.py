@@ -31,6 +31,6 @@ from functions import get_info, plot_deployments_station
 #     print("ID: ", id)
 #     plot_deployments_station(id)
 
-id = "0-724-0-0000000000008381"
+id = "0-454-2-AWSRUMPHI"
 
 plot_deployments_station(id)
