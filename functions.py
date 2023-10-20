@@ -38,12 +38,15 @@ def plot_deployments_station(id):
 
     # get variables at a station
 
-    f = open(os.getcwd()+'/stations.json')
-    data = json.load(f)
+    observedProperties = []
+    url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
+    xml = urlopen(url).read()
+    soup = BeautifulSoup(xml, 'xml')
 
-    df = pd.DataFrame(data["stations"])
-    df["observedProperties_unique"] = range(0,len(df))
-    pd.options.mode.chained_assignment = None
+    with open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt') as myFile:
+        observedProperties_line = soup.find_all('observedProperty')
+        observedProperties_notation = re.findall(r'\d+',str(observedProperties_line))
+        observedProperties.append(observedProperties_notation)
 
     from functools import reduce
 
@@ -52,11 +55,8 @@ def plot_deployments_station(id):
         ans = reduce(lambda re, x: re+[x] if x not in re else re, list1, [])
         return(ans)
 
-    for i in range(0,len(df)):
-        unique_codes = unique(df["observedProperties"][i])
-        df["observedProperties_unique"][i] = unique_codes
+    variables_u = unique(observedProperties[0])
 
-    variables = df[df["wigosId"]==id]["observedProperties_unique"].tolist()
     f=open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt')
     lines=f.readlines()
     all_dates = []
@@ -64,8 +64,9 @@ def plot_deployments_station(id):
     # prepare data frame #
     df_station = pd.DataFrame(np.nan, index=[0],columns=["beginPosition", "endPosition", "station", "variable"])
 
-    for var in range(0,len(variables[0])):
-        variable = variables[0][var]
+    for var in variables_u:
+        variable = var
+        # print("test: ", variable)
         station = id
 
         # find line numbers containing the WMDR number of the observed property
@@ -73,7 +74,7 @@ def plot_deployments_station(id):
 
         with open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt') as myFile:
             for num, line in enumerate(myFile, 1):
-                if variables[0][var] in line:
+                if variable in line:
                     numbers.append(num)
 
         # find the line numbers with <om:observedProperty
@@ -81,8 +82,12 @@ def plot_deployments_station(id):
         numbers_obs = []
 
         for n in numbers:
+            # print("test: ", n)
             if obs in lines[n-1]:
-                numbers_obs.append(n)
+                # print(n)
+                number = re.findall(r'\d+',lines[n-1])
+                if number[0]==str(var):
+                    numbers_obs.append(n)
 
         ### read 20 lines before "observedProperty" line to get "beginPosition" (& "endPosition")
         for n in numbers_obs:
@@ -95,6 +100,7 @@ def plot_deployments_station(id):
             positions = []
 
             for n in line_numbers:
+                # print("n: ", n)
                 if start in lines[n]:
                     beginning = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
                     if beginning:
@@ -145,10 +151,10 @@ def plot_deployments_station(id):
     plt.style.use('default')
     fig, axes = plt.subplots(1,1, figsize=(14,8))
 
-    variables = df[df["wigosId"]==id]["observedProperties_unique"].tolist()
+    variables = variables_u
 
-    for var in range(0,len(variables[0])):
-        df_var = df_station[df_station["variable"]==str(variables[0][var])]
+    for var in range(0,len(variables)):
+        df_var = df_station[df_station["variable"]==str(variables[var])]
 
         x_values = [pd.to_datetime(df_var["beginPosition"]), pd.to_datetime(df_var["endPosition"])]
         # print(x_values)
@@ -156,8 +162,8 @@ def plot_deployments_station(id):
 
     # print(variables)
     names = []
-    for var in range(0,len(variables[0])):
-        variable_df = df_station[df_station["variable"]==str(variables[0][var])]
+    for var in range(0,len(variables)):
+        variable_df = df_station[df_station["variable"]==str(variables[var])]
         name = variable_df.iloc[0]["variables_names"]
         # print(name)
         names.append(name)
@@ -169,4 +175,4 @@ def plot_deployments_station(id):
 
 
     # save figure
-    fig.savefig(os.getcwd()+"/Plots/Deployments/Deployments_"+id+".jpeg", bbox_inches='tight')
+    fig.savefig(os.getcwd()+"/Plots/Deployments_"+id+".jpeg", bbox_inches='tight')
