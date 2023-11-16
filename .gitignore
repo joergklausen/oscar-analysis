@@ -1,0 +1,18 @@
+# data/
+
+
+.vscode/
+.vscode*
+
+Files/File*
+Files*
+*Files
+
+
+# caches and byte-complied code
+__pycache__/
+__pycache__*
+*.pyc
+
+# log
+*.log

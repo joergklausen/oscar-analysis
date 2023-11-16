@@ -29,7 +29,7 @@ def make_dictionary(label):
 
 
 
-variables = ['ObservedVariableAtmosphere_WMDR', 'ObservedVariableOcean_WMDR', 'ObservedVariableTerrestrial_WMDR']
-
+# variables = ['ObservedVariableAtmosphere_WMDR', 'ObservedVariableOcean_WMDR', 'ObservedVariableTerrestrial_WMDR']
+variables = ["T_GO_VARIABLE_REF"]
 for var in variables:
     make_dictionary(label=var)

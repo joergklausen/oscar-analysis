@@ -19,18 +19,6 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
 
-def get_info(id):
-
-    url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
-    xml = urlopen(url).read()
-    soup = BeautifulSoup(xml, 'xml')
-
-    # Retrieve all of the anchor tags
-    content = soup('OAI-PMH')
-
-    return(content)
-
-
 def plot_deployments_station(id):
 
     # get variables at a station
@@ -39,9 +27,10 @@ def plot_deployments_station(id):
     url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
     xml = urlopen(url).read()
     soup = BeautifulSoup(xml, 'xml')
+    content = soup('OAI-PMH')
 
     with open(os.getcwd()+"/Files/File_"+id+".txt", 'w') as f:
-        f.write(str(get_info(id)))
+        f.write(str(content))
 
     with open(os.getcwd()+"/Files/File_"+id+".txt") as myFile:
         observedProperties_line = soup.find_all('observedProperty')
@@ -51,7 +40,6 @@ def plot_deployments_station(id):
     from functools import reduce
 
     def unique(list1):
-        # Print directly by using * symbol
         ans = reduce(lambda re, x: re+[x] if x not in re else re, list1, [])
         return(ans)
 
@@ -61,12 +49,11 @@ def plot_deployments_station(id):
     lines=f.readlines()
     all_dates = []
 
-    # prepare data frame #
+    # prepare data frame
     df_station = pd.DataFrame(np.nan, index=[0],columns=["beginPosition", "endPosition", "station", "variable"])
 
     for var in variables_u:
         variable = var
-        # print("test: ", variable)
         station = id
 
         # find line numbers containing the WMDR number of the observed property
@@ -82,9 +69,7 @@ def plot_deployments_station(id):
         numbers_obs = []
 
         for n in numbers:
-            # print("test: ", n)
             if obs in lines[n-1]:
-                # print(n)
                 number = re.findall(r'\d+',lines[n-1])
                 if number[0]==str(var):
                     numbers_obs.append(n)
@@ -126,21 +111,10 @@ def plot_deployments_station(id):
     df_station.drop([0], axis=0, inplace=True)
     print(df_station)
 
-    # combine 3 dictionaries (Atmosphere, Ocean & Terrestrial)
+    # find variable name according to dictionary
 
-    with open(os.getcwd()+'/WMDR_dictionaries/'+"ObservedVariableAtmosphere_WMDR"+'_dictionary.json') as f:
+    with open(os.getcwd()+'/WMDR_dictionaries/'+'T_GO_VARIABLE_REF_dictionary.json') as f:
         dictionary = json.loads(f.read())
-
-
-    with open(os.getcwd()+'/WMDR_dictionaries/'+"ObservedVariableOcean_WMDR"+'_dictionary.json') as f:
-        dictionary_Ocean = json.loads(f.read())
-
-    dictionary.update(dictionary_Ocean)
-
-    with open(os.getcwd()+'/WMDR_dictionaries/'+"ObservedVariableTerrestrial_WMDR"+'_dictionary.json') as f:
-        dictionary_Terrestrial = json.loads(f.read())
-
-    dictionary.update(dictionary_Terrestrial)
 
     variables = df_station["variable"]
 
@@ -157,7 +131,6 @@ def plot_deployments_station(id):
         df_var = df_station[df_station["variable"]==str(variables[var])]
 
         x_values = [pd.to_datetime(df_var["beginPosition"]), pd.to_datetime(df_var["endPosition"])]
-        # print(x_values)
         plt.plot(x_values, [var,var], 'bo', linestyle="--")
 
     # print(variables)
@@ -165,7 +138,6 @@ def plot_deployments_station(id):
     for var in range(0,len(variables)):
         variable_df = df_station[df_station["variable"]==str(variables[var])]
         name = variable_df.iloc[0]["variables_names"]
-        # print(name)
         names.append(name)
     n = range(0,len(names))
     plt.yticks(n,names)
