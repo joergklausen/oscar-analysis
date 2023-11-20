@@ -14,7 +14,7 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 ### General analyses
 
 ### Animation: evolution over time
-![Evolution of stations over time](https://github.com/sdanioth/OSCAR_analysis/blob/main/station_establishment_Kenya.gif)
+[Evolution of stations over time](https://github.com/sdanioth/OSCAR_analysis/blob/main/station_establishment_Kenya.gif)
 
 ## Analyses of ambiguities in the station catalogue
 
