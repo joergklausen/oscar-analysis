@@ -1,11 +1,11 @@
 [<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/  http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-<responseDate>2023-11-07T13:35:02Z</responseDate>
+<responseDate>2023-11-20T13:11:08Z</responseDate>
 <request identifier=" 0-20000-0-63641" metadataPrefix="wmdr" verb="GetRecord">https://oscar.wmo.int:443/oai/provider</request>
 <GetRecord>
 <record>
 <header>
 <identifier>0-20000-0-63641</identifier>
-<datestamp>2023-10-04T12:43:05Z</datestamp>
+<datestamp>2023-11-16T07:47:58Z</datestamp>
 <setSpec>landFixed</setSpec>
 </header>
 <metadata>

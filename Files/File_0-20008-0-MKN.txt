@@ -1,11 +1,11 @@
 [<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/  http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-<responseDate>2023-11-07T13:35:26Z</responseDate>
+<responseDate>2023-11-20T13:11:25Z</responseDate>
 <request identifier=" 0-20008-0-MKN" metadataPrefix="wmdr" verb="GetRecord">https://oscar.wmo.int:443/oai/provider</request>
 <GetRecord>
 <record>
 <header>
 <identifier>0-20008-0-MKN</identifier>
-<datestamp>2023-10-04T12:43:36Z</datestamp>
+<datestamp>2023-11-15T14:23:10Z</datestamp>
 <setSpec>landFixed</setSpec>
 </header>
 <metadata>
@@ -2766,7 +2766,7 @@ P.O. Box 257</gco:CharacterString>
 <wmdr:uom xlink:href="http://codes.wmo.int/wmdr/unit/degC" xlink:type="simple"/>
 <wmdr:timeStampMeaning xlink:type="simple"/>
 <wmdr:referenceDatum>
-<gml:VerticalDatum gml:id="id_d5cc3049-1b42-41fd-b178-df6063c48d41">
+<gml:VerticalDatum gml:id="id_7ba0b37b-dfef-4d27-ab60-b3f5f23874c2">
 <gml:identifier codeSpace=""/>
 <gml:remarks>n/a</gml:remarks>
 <gml:scope/>

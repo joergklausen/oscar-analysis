@@ -1,11 +1,11 @@
 [<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/  http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-<responseDate>2023-11-07T13:35:13Z</responseDate>
+<responseDate>2023-11-20T13:11:16Z</responseDate>
 <request identifier=" 0-20008-0-MLD" metadataPrefix="wmdr" verb="GetRecord">https://oscar.wmo.int:443/oai/provider</request>
 <GetRecord>
 <record>
 <header>
 <identifier>0-20008-0-MLD</identifier>
-<datestamp>2022-08-19T12:18:37Z</datestamp>
+<datestamp>2023-11-15T14:28:10Z</datestamp>
 <setSpec>landFixed</setSpec>
 </header>
 <metadata>
@@ -287,7 +287,7 @@
 <gmd:transferOptions xlink:type="simple">
 <gmd:MD_DigitalTransferOptions>
 <gmd:onLine xlink:type="simple">
-<gmd:CI_OnlineResource>
+<gmd:CI_OnlineResource id="id_e9184075-5530-3237-e053-148ef98d6314">
 <gmd:linkage>
 <gmd:URL>http://woudc.org/archive/Archive-NewFormat/OzoneSonde_1.0_1/stn448/ecc</gmd:URL>
 </gmd:linkage>
@@ -437,7 +437,7 @@
 <gmd:transferOptions xlink:type="simple">
 <gmd:MD_DigitalTransferOptions>
 <gmd:onLine xlink:type="simple">
-<gmd:CI_OnlineResource>
+<gmd:CI_OnlineResource id="id_e9184075-5531-3237-e053-148ef98d6314">
 <gmd:linkage>
 <gmd:URL>http://woudc.org/archive/Archive-NewFormat/OzoneSonde_1.0_1/stn448/ecc</gmd:URL>
 </gmd:linkage>
@@ -596,7 +596,7 @@
 <gmd:transferOptions xlink:type="simple">
 <gmd:MD_DigitalTransferOptions>
 <gmd:onLine xlink:type="simple">
-<gmd:CI_OnlineResource>
+<gmd:CI_OnlineResource id="id_e9184075-5532-3237-e053-148ef98d6314">
 <gmd:linkage>
 <gmd:URL>http://wrdc.mgo.rssi.ru</gmd:URL>
 </gmd:linkage>

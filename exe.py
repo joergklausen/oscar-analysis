@@ -26,9 +26,9 @@ for station in data_json["stationSearchResults"]:
 
 
 # make plots
-# for id in wigosIds:
-#     print("ID: ", id)
-#     plot_deployments_station(id)
+for id in wigosIds:
+    print("ID: ", id)
+    plot_deployments_station(id)
 
-id = "0-20000-0-63709"
-plot_deployments_station(id)
+# id = "0-20000-0-63709"
+# plot_deployments_station(id)
