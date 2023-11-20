@@ -18,9 +18,32 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 
 ## Analysis over all stations of a country
 
-### General analyses
+### Piechart: reporting status
+* E.g. Kenya:
+![Pie chart](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/Station_ReportingStatus_piechart.jpeg)
 
-### Animation: evolution over time
+### Barplot: station establishment over decades
+* E.g. Kenya:
+![Barplot](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/Station_establishment_barplot.jpeg)
+
+### Overview of the measured variables
+* E.g. Kenya:
+![Variables](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/MeasuredVariables_Overview.jpeg)
+
+### One specific variable in a country
+* E.g. Air temperature in Kenya:
+![Variable 224](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/Variable_224_KEN.jpeg)
+
+## Map
+### Overview: all stations in the country
+* E.g. Kenya;
+![Kenyan overview](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/all_stations_reportingStatus.jpeg)
+
+### Establishment over the decades
+* E.g. Kenya:
+![including reporting status](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/Station_establishment_decade_reporting.jpeg)
+
+## Animation: evolution over time
 ![Evolution of stations over time](https://github.com/sdanioth/OSCAR_analysis/blob/main/station_establishment_Kenya.gif)
 
 ## Analyses of ambiguities in the station catalogue
