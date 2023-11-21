@@ -44,6 +44,8 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 ![including reporting status](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/Station_establishment_decade_reporting.jpeg)
 
 ## Animation: evolution over time
+* Gif: [Evolution of stations over time](https://github.com/sdanioth/OSCAR_analysis/blob/main/station_establishment_Kenya.gif)
+* The stations are added according to their year of establishment (blue dot). When they are closed, the dot turns red. 
 ![Evolution of stations over time](https://github.com/sdanioth/OSCAR_analysis/blob/main/station_establishment_Kenya.gif)
 
 ## Analyses of ambiguities in the station catalogue
