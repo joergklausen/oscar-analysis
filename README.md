@@ -59,4 +59,8 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 ### Establishment date vs. date of first deployment
 ![Overview over all Kenyan stations](https://github.com/sdanioth/OSCAR_analysis/blob/main/Plots/EstablshmentDate_vs_FirstDeployment.jpeg)
 * The plot shows the establishment dates of the stations and the dates of the first registered deployments of the stations. The y-axis shows the stations, whereas the x-axis represents the time.
-* The red triangles indicate the establishment date. The blue dots indicate the date of the first deployment. There is a black line in between when the establishment date does not correspond to the date of the beginning of the first deployment. 
+* The red triangles indicate the establishment date. The blue dots indicate the date of the first deployment. There is a black line in between when the establishment date does not correspond to the date of the beginning of the first deployment.
+* If the establishment date is after the date of the first deployment, the station label appears in red.
+* If the establishment date is before the date of the first deployment but does not correspond to it, the station label appears in orange.
+* If the start date of the deployment is missing, the station label appears in yellow. 
+
