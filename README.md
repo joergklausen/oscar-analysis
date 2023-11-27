@@ -32,7 +32,7 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 
 ### One specific variable in a country
 * E.g. Air temperature in Kenya:
-![Variable 224](../main/Plots/2023-11-27/Barplot_ObservedVariables_stationProgram_2023-11-27_.jpeg)
+![Variable 224](../main/Plots/2023-11-27/Deployments_224_KEN_2023-11-27_.jpeg)
 
 ## Map
 ### Overview: all stations in the country
