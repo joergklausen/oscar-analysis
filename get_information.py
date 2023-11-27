@@ -444,7 +444,7 @@ def get_deployments_variable_country(country, variable):
             # find line numbers containing the WMDR number of the observed property
             numbers = []
 
-            with open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt') as myFile:
+            with open(os.getcwd()+'/Files/File_'+id+'.txt') as myFile:
                 for num, line in enumerate(myFile, 1):
                     if variable in line:
                         numbers.append(num)
@@ -461,16 +461,15 @@ def get_deployments_variable_country(country, variable):
                     if number[0]==str(variable):
                         numbers_obs.append(n)
 
-            # read 20 lines before "observedProperty" line to get "beginPosition" (& "endPosition")
+            # read 50 lines before "observedProperty" line to get "beginPosition" (& "endPosition")
             for n in numbers_obs:
                 start = "beginPosition"
                 end = "endPosition"
                 line_numbers = range(n-50,n)
 
-                f=open('/home/sdanioth/Documents/git/OSCAR_analysis/Files/File_'+id+'.txt')
+                f=open(os.getcwd()+'/Files/File_'+id+'.txt')
                 lines=f.readlines()
                 positions = []
-
                 for n in line_numbers:
                     if start in lines[n]:
                         beginning = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
@@ -488,8 +487,13 @@ def get_deployments_variable_country(country, variable):
                         else:
                             positions.append(pd.Timestamp.today().strftime("%Y-%m-%d"))
 
-                beginPosition  = positions[0]
-                endPosition = positions[1]
+                if not positions:
+                    beginPosition = np.nan
+                    endPosition = np.nan
+                else:
+                    beginPosition  = positions[0]
+                    endPosition = positions[1]
+
                 # write information to data frame
                 new_row = {"beginPosition":beginPosition,"endPosition":endPosition,"station":station,"variable":variable}
                 df_variable.loc[len(df_variable)] = new_row
