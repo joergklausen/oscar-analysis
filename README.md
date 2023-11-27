@@ -28,7 +28,7 @@ Analysis of the [OSCAR/Surface](https://oscar.wmo.int/surface/#/) station catalo
 
 ### Overview of the measured variables
 * E.g. Kenya:
-  ![Variables](../main/Plots/MeasuredVariables_Overview.jpeg)
+  ![Variables](../main/Plots/2023-11-27/Barplot_ObservedVariables_2023-11-27_.jpeg)
 
 ### One specific variable in a country
 * E.g. Air temperature in Kenya:
