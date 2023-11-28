@@ -79,7 +79,7 @@ def plot_overview_map(json_file, reporting = True):
         os.makedirs(dir)
 
     # save plot
-
+    if reporting == True:
         plt.savefig(dir+"/Map_all_stations_reportingStatus_"+str(date_today)+"_.jpeg", bbox_inches='tight')
     else:
         plt.savefig(dir+"/Map_all_stations_catalogued_"+str(date_today)+"_.jpeg", bbox_inches='tight')
@@ -160,7 +160,7 @@ def plot_maps_establishment_decade(json_file, reporting = True):
     if reporting == True:
         plt.savefig(dir+"/Map_establishment_decade_reporting_"+str(date_today)+"_.jpeg", bbox_inches='tight')
     else:
-        plt.savefig(dir+"/Map_all_stations_reportingStatus_"+str(date_today)+"_.jpeg", bbox_inches='tight')
+        plt.savefig(dir+"/Map_establishment_decade_reportingStatus_"+str(date_today)+"_.jpeg", bbox_inches='tight')
 
 
 # define function: Barplot over the decades showing the station establishment & today's reporting status
