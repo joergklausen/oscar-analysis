@@ -636,7 +636,7 @@ def plot_date_verification(country):
         os.makedirs(dir)
 
     # save figure
-    fig.savefig(dir + "/EstablishmentDate_vs_FirstDeployment_"+str(date_today)+"_.jpeg", bbox_inches='tight')
+    fig.savefig(dir+"/EstablishmentDate_vs_FirstDeployment_"+str(date_today)+"_.jpeg", bbox_inches='tight')
 
 
 # define function: create plot with overview of all deployments of a variable of interest within a country

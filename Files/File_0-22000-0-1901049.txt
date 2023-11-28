@@ -1,5 +1,5 @@
 [<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/  http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
-<responseDate>2023-11-28T08:01:06Z</responseDate>
+<responseDate>2023-11-28T10:01:09Z</responseDate>
 <request identifier=" 0-22000-0-1901049" metadataPrefix="wmdr" verb="GetRecord">https://oscar.wmo.int:443/oai/provider</request>
 <GetRecord>
 <record>
