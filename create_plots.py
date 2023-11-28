@@ -218,7 +218,8 @@ def barplot_establishment_decade(json_file, reporting = True):
     plt.xticks(r + width/2,decades, rotation=25)
     plt.ylabel("Number of stations established", fontsize=12, fontweight="bold")
     plt.title("Establishment of stations", fontsize=16, fontweight="bold")
-    plt.legend()
+    if reporting == True:
+        plt.legend()
 
     # save plot to folder with today's date
     date_today = date.today()
@@ -479,13 +480,14 @@ def barplot_observedProperties_overview_stationProgram(json_file):
 
 # define function: create plot showing all deployments registered for a specific station
 
-def plot_deployments_station(WIGOS_ID, include_establishmentDate = False):
+def plot_deployments_station(WIGOS_ID, include_establishmentDate = False, show=False):
 
     """ create plot showing all deployments registered for a specific station
 
         Parameters:
         WIGOS_ID (str): WIGOS identifier of the station of interest
         include_establishmentDate (boolean): if True - vertical red line indicates establishment date
+        show (boolean): whether plot should be shown (default: show=False - plot is saved without being shown)
     """
 
     id = WIGOS_ID
@@ -538,7 +540,10 @@ def plot_deployments_station(WIGOS_ID, include_establishmentDate = False):
             os.makedirs(dir)
         fig.savefig(dir + "/Deployments_"+id+"_"+str(date_today)+"_.jpeg", bbox_inches='tight')
 
-    plt.close()
+    if show == True:
+        plt.show()
+    else:
+        plt.close()
 
 
 # define function: create date verification plot

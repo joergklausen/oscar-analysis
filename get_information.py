@@ -309,11 +309,11 @@ def get_information_date_verification(country):
 
     """ create data frame with the required information (station, establishment date and start of first deployment) from the underlying xml files
 
-    Parameters:
+        Parameters:
         country (str): country code - e.g. KEN for Kenya
 
-    Returns:
-        df_dates (data frame): ata frame with the required information (station, establishment date and start of first deployment)
+        Returns:
+        df_dates (data frame): data frame with the required information (station, establishment date and start of first deployment)
     """
 
     # prepare data frame
