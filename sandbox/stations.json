@@ -306,7 +306,7 @@
             "ele": 1585.0,
             "facilityType": "landFixed",
             "observedProperties": [
-                251,
+                12249,
                 210,
                 210,
                 216,
@@ -347,7 +347,7 @@
             "facilityType": "landFixed",
             "observedProperties": [
                 179,
-                251,
+                12249,
                 256,
                 256,
                 265,
@@ -380,7 +380,7 @@
             "ele": 1796.16,
             "facilityType": "landFixed",
             "observedProperties": [
-                251,
+                12249,
                 210,
                 216,
                 224,
@@ -1749,7 +1749,7 @@
             "facilityType": "landFixed",
             "observedProperties": [
                 179,
-                251,
+                12249,
                 265,
                 210,
                 266,
