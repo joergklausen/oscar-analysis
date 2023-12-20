@@ -120,6 +120,7 @@ def plot_maps_establishment_decade(json_file, reporting = True):
 
         # find stations established within decade
         df = pd.DataFrame(data["stations"])
+        df['dateEstablished'] = pd.to_datetime(df['dateEstablished'], format='%Y-%m-%dZ')
         if i == 0:
             df = df[(pd.to_datetime(df["dateEstablished"]) < pd.to_datetime(datetime.datetime(1961, 1,1)))]
         else:
@@ -191,6 +192,7 @@ def barplot_establishment_decade(json_file, reporting = True):
     for i, decade in enumerate(decades):
 
         df = pd.DataFrame(data["stations"])
+        df['dateEstablished'] = pd.to_datetime(df['dateEstablished'], format='%Y-%m-%dZ')
 
         if i == 0:
             df = df[(pd.to_datetime(df["dateEstablished"]) < pd.to_datetime(datetime.datetime(years[i], 1,1)))]
@@ -235,7 +237,6 @@ def barplot_establishment_decade(json_file, reporting = True):
         plt.savefig(dir+"/Barplot_station_establishment_"+str(date_today)+"_reporting.jpeg", bbox_inches='tight')
     else:
         plt.savefig(dir+"/Barplot_station_establishment_"+str(date_today)+"_.jpeg", bbox_inches='tight')
-
 
 
 # define function: Pie chart the number of stations
@@ -299,9 +300,10 @@ def barplot_observedProperties_overview(json_file):
     f = open(json_file)
     data = json.load(f)
     df = pd.DataFrame(data["stations"])
+
     # create column for number of unique observed properties
-    df["observedProperties_unique"] = range(0,len(df))
-    pd.options.mode.chained_assignment = None
+    df.insert(1, "observedProperties_unique", None)
+    # pd.options.mode.chained_assignment = None
 
     # find unique values within list
     def unique(list1):
@@ -324,7 +326,7 @@ def barplot_observedProperties_overview(json_file):
         dictionary = json.loads(f.read())
 
     variables = df_count["variables"]
-    df_count["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(var)]) for var in variables]
+    df_count["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(var))]) for var in variables]
 
     # create plot
     plt.style.use('default')
@@ -354,7 +356,6 @@ def barplot_observedProperties_overview(json_file):
     plt.savefig(dir+"/Barplot_ObservedVariables_"+str(date_today)+"_.jpeg", bbox_inches='tight')
 
 
-
 # define function: Barplot observed propertiess
 
 def barplot_observedProperties_overview_stationProgram(json_file):
@@ -373,8 +374,7 @@ def barplot_observedProperties_overview_stationProgram(json_file):
     df = pd.DataFrame(data["stations"])
 
     # create column for number of unique observed properties
-    df["observedProperties_unique"] = range(0,len(df))
-    pd.options.mode.chained_assignment = None
+    df.insert(1, "observedProperties_unique", None)
 
     # drop GAW stations
     df = df.drop(df[df['wigosId'] == '0-20008-0-MKN'].index)
@@ -405,7 +405,7 @@ def barplot_observedProperties_overview_stationProgram(json_file):
         dictionary = json.loads(f.read())
 
     variables = df_count["variables"]
-    df_count["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(var)]) for var in variables]
+    df_count["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(var))]) for var in variables]
     df_count["stationProgram"] = "misc"
 
     # GAW
@@ -413,7 +413,8 @@ def barplot_observedProperties_overview_stationProgram(json_file):
     df_GAW = df[(df['wigosId'].isin(['0-20008-0-MKN', '0-20008-0-NRB', '0-20008-0-MLD']))]
     df_GAW.reset_index(drop=True, inplace=True)
 
-    df_GAW["observedProperties_unique"] = range(0,len(df_GAW))
+    # df_GAW["observedProperties_unique"] = range(0,len(df_GAW))
+    df_GAW.insert(1, "observedProperties_unique", None)
     pd.options.mode.chained_assignment = None
     for i in range(0,len(df_GAW)):
         unique_codes = unique(df_GAW["observedProperties"][i])
@@ -425,7 +426,7 @@ def barplot_observedProperties_overview_stationProgram(json_file):
     df_GAW.index.name = 'variables'
     df_GAW.reset_index(inplace=True)
     variables = df_GAW["variables"]
-    df_GAW["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(var)]) for var in variables]
+    df_GAW["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(var))]) for var in variables]
     df_GAW["stationProgram"] = "GAW"
 
     # GAW stations
@@ -476,8 +477,6 @@ def barplot_observedProperties_overview_stationProgram(json_file):
     plt.savefig(dir+"/Barplot_ObservedVariables_stationProgram_"+str(date_today)+"_.jpeg", bbox_inches='tight')
 
 
-
-
 # define function: create plot showing all deployments registered for a specific station
 
 def plot_deployments_station(WIGOS_ID, include_establishmentDate = False, show=False):
@@ -500,7 +499,7 @@ def plot_deployments_station(WIGOS_ID, include_establishmentDate = False, show=F
     variables = variables_u
     # plot every deployment
     for var in range(0,len(variables)):
-        df_var = df_station[df_station["variable"]==str(variables[var])]
+        df_var = df_station[df_station["variable"]==variables[var]]
         x_values = [pd.to_datetime(df_var["beginPosition"]), pd.to_datetime(df_var["endPosition"])]
         plt.plot(x_values, [var,var], 'bo', linestyle="--")
 
@@ -511,10 +510,10 @@ def plot_deployments_station(WIGOS_ID, include_establishmentDate = False, show=F
         # legend
         plt.legend(loc="upper left", fontsize=10, scatterpoints=25, bbox_to_anchor=(-0.2, 1.06))
 
-    # plot ployment names
+    # plot deployment names
     names = []
     for var in range(0,len(variables)):
-        variable_df = df_station[df_station["variable"]==str(variables[var])]
+        variable_df = df_station[df_station["variable"]==variables[var]]
         name = variable_df.iloc[0]["variables_names"]
         names.append(name)
     n = range(0,len(names))
@@ -624,7 +623,7 @@ def plot_date_verification(country):
     plt.legend(by_label.values(), by_label.keys(), loc="upper left")
 
     # set title
-    plt.title("Establishment date vs. first deployment"+ ' (status on ' + pd.Timestamp.today().strftime("%Y-%m-%d") + ')', fontsize=16, fontweight="bold")
+    plt.title('Establishment date vs. first deployment (status on ' + pd.Timestamp.today().strftime("%Y-%m-%d") + ')', fontsize=16, fontweight="bold")
 
     # save plot to folder with today's date
     date_today = date.today()
@@ -658,27 +657,23 @@ def plot_deployments_variable_country(country, variable):
     from get_information import get_deployments_variable_country
     df_variable, wigosIds = get_deployments_variable_country(country, variable)
 
-    # plot deployment for every station
+     # plot deployment for every station
     for id in range(0,len(wigosIds)):
         df_var = df_variable[df_variable["station"]==str(wigosIds[id])]
         plt.hlines(y=id, xmin=pd.Series(pd.to_datetime(df_variable["beginPosition"])).min(), xmax=pd.Timestamp.today(), linewidth=0.1, color="black")
         x_values = [pd.to_datetime(df_var["beginPosition"]), pd.to_datetime(df_var["endPosition"])]
         plt.plot(x_values, [id,id], 'bo', linestyle="--")
 
-    # add station names
     names = []
-    for var in range(0,len(wigosIds)):
-        variable_df = df_variable[df_variable["station"]==str(wigosIds[var])]
-        if not variable_df.empty:
-            name = str(variable_df.iloc[0]["station"])
-            names.append(name)
+    for id in wigosIds:
+        names.append(id)
 
     plt.xlim(xmin= pd.Series((pd.to_datetime(df_variable["beginPosition"]))).min(), xmax=pd.Timestamp.today())
     n = range(0,len(names))
     plt.yticks(n,names)
 
     # title
-    plt.title("Variable: " + variable, fontsize=16, fontweight="bold")
+    plt.title("Variable: " + str(variable), fontsize=16, fontweight="bold")
 
     # save plot to folder with today's date
     date_today = date.today()
@@ -690,4 +685,4 @@ def plot_deployments_variable_country(country, variable):
         os.makedirs(dir)
 
     # save figure
-    fig.savefig(dir+"/Deployments_"+variable+"_"+country+"_"+str(date_today)+"_.jpeg", bbox_inches='tight')
+    fig.savefig(dir+"/Deployments_"+str(variable)+"_"+country+"_"+str(date_today)+"_.jpeg", bbox_inches='tight')

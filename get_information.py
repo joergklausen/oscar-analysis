@@ -10,8 +10,6 @@ import json
 import re
 import os
 import pandas as pd
-import datetime as dt
-# %matplotlib inline
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
@@ -21,6 +19,7 @@ from bs4 import BeautifulSoup
 from functools import reduce
 from collections import OrderedDict
 from datetime import date
+from datetime import datetime
 
 
 # define function: get all WIGOS identifier
@@ -70,89 +69,97 @@ def save_basic_info_to_json(country):
     # get list of WIGOS identifiers of country of interest
     wigosIds = get_WIGOS_ID_country(country)
 
+    # name spaces
+    ns = {
+        "gml": "http://www.opengis.net/gml/3.2",
+        "xlink": "http://www.w3.org/1999/xlink",
+        "wmdr": "http://def.wmo.int/wmdr/2017",
+        "gco": "http://www.isotc211.org/2005/gco",
+        "gmd": "http://www.isotc211.org/2005/gmd",
+        "ns6": "http://def.wmo.int/opm/2013",
+        "ns7": "http://def.wmo.int/metce/2013",
+        "om": "http://www.opengis.net/om/2.0",
+        "ns9": "http://www.isotc211.org/2005/gts",
+        "sam": "http://www.opengis.net/sampling/2.0",
+        "sams": "http://www.opengis.net/samplingSpatial/2.0",
+        "xsi": "http://www.w3.org/2001/XMLSchema-instance"
+    }
+
     # Get station xml Files via jOAI and save relevant information in json file
     for id in wigosIds:
 
-        # get url
+        ## set wmdr xml file location
+        record_file = os.getcwd()+"/Files/file.xml"
+        # open xml
         url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
+        response = requests.get(url)
+        soup= BeautifulSoup(response.content,"xml")
+        with open(record_file, 'w') as f:
+            f.write(soup.prettify())
 
-        # get xml from url
-        document = requests.get(url)
-        soup= BeautifulSoup(document.content,"xml")
+        tree = ET.parse(record_file)
+        root = tree.getroot()
+
 
         # get information from OAI
-        metadata = soup.find('metadata') #check if xml file is available on jOAI
+        metadata = root.find('.//wmdr:WIGOSMetadataRecord',ns) #check if xml file is available on jOAI
         if metadata:
-
             # Name
-            name = soup.find("name")
-            name = name.get_text()
+            name = root.find(".//wmdr:facility/wmdr:ObservingFacility/gml:name", ns).text
+            name = name.strip()
 
             # Location
-            location = soup.find_all('pos')
-            location = re.findall(r'.*?\>(.*)\<.*',str(location))[0]
-            loc = re.findall(r'-?[0-9]*\.?[0-9]*', location)
-            lat = loc[0]
-            lon = loc[2]
-            if len((loc)) == 6: # check if elevation is given
-                ele = loc[4]
+            location = root.find(".//wmdr:facility/wmdr:ObservingFacility/wmdr:geospatialLocation/wmdr:GeospatialLocation/wmdr:geoLocation/gml:Point/gml:pos", ns).text
+            split_values = location.split()
+            numbers = [float(value) for value in split_values]
+            lat = numbers[0]
+            lon = numbers[1]
+            if len(numbers) == 3:
+                ele = numbers[2]
             else:
                 ele = "unknown"
 
             # facility type
-            facilityType = soup.find('facilityType')
-            facilityType = re.findall(r'http://codes.wmo.int/wmdr/FacilityType/(.*)\"\s.*',str(facilityType))[0]
+            facilityType = root.find(".//wmdr:facility/wmdr:ObservingFacility/wmdr:facilityType", ns).attrib["{http://www.w3.org/1999/xlink}href"]
+            facilityType = facilityType.split('/')[-1]
 
             # observed Variables
-            observedProperties = soup.find_all('observedProperty')
-            observedProperties_notation = re.findall(r'\d+',str(observedProperties))
+            variables = list()
+            capabilities = root.findall(".//wmdr:ObservingCapability", ns)
+            for capability in capabilities:
+                observations = capability.findall(".//wmdr:observation", ns)
+                for observation in observations:
+                    # find observed property
+                    observedProperty = observation.find(".//om:OM_Observation/om:observedProperty", ns).attrib["{http://www.w3.org/1999/xlink}href"]
+                    # get notation of observed property
+                    variables.append(int(observedProperty.split('/')[-1]))
 
             # Date established
-            dateEstablished = soup.find_all('dateEstablished')
+            dateEstablished = root.find(".//wmdr:facility/wmdr:ObservingFacility/wmdr:dateEstablished", ns).text
             if dateEstablished:
-                dateEstablished = re.findall(r'\d{4}-\d{2}-\d{2}',str(dateEstablished))[0]
+                 dateEstablished = dateEstablished.strip()
             else:
-                dateEstablished = "unknown"
+                dateEstablished = np.nan
 
             # Date closed
-            dateClosed = soup.find_all('dateClosed')
+            dateClosed = root.findall(".//wmdr:facility/wmdr:ObservingFacility/wmdr:dateClosed", ns)
             if dateClosed:
-                dateClosed = re.findall(r'\d{4}-\d{2}-\d{2}',str(dateClosed))[0]
+                dateClosed = dateClosed[0].text.strip()
             else:
-                dateClosed = "NA"
+                dateClosed = np.nan
 
             # ReportingStatus
-            reportingStatus = soup.find('reportingStatus')
+            reportingStatus = root.findall(".//wmdr:facility/wmdr:ObservingFacility/wmdr:programAffiliation/wmdr:ProgramAffiliation/wmdr:reportingStatus/wmdr:ReportingStatus/wmdr:reportingStatus", ns)
             if reportingStatus:
-                reportingStatus = soup.find_all('reportingStatus')
-                reportingStatus = re.findall(r'http://codes.wmo.int/wmdr/ReportingStatus/(.*)\"\s.*',str(reportingStatus))[0]
+                reportingStatus = reportingStatus[0].attrib["{http://www.w3.org/1999/xlink}href"]
+                reportingStatus = reportingStatus.split('/')[-1]
             else:
                 reportingStatus = "unknown"
 
             # save information to json File
-            aDict = {"wigosId" : id, "name":name, "lat":lat, "lon":lon, "ele":ele, "facilityType":facilityType, "observedProperties" : observedProperties_notation, "dateEstablished" : dateEstablished, "dateClosed" : dateClosed, "reportingStatus" : reportingStatus}
+            aDict = {"wigosId" : id, "name":name, "lat":lat, "lon":lon, "ele":ele, "facilityType":facilityType, "observedProperties" : variables, "dateEstablished" : dateEstablished, "dateClosed" : dateClosed, "reportingStatus" : reportingStatus}
             # print(aDict)
             write_json(aDict)
-
-# define function: get xml files
-
-def get_xml_info(WIGOS_ID):
-
-    """get xml information through jOAI and save file
-
-        Parameters:
-        WIGOS_ID (str): WIGOS identifier of the station of interest
-    """
-    id = WIGOS_ID
-    # open xml file through jOAI
-    url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + str(id)
-    xml = urlopen(url).read()
-    soup = BeautifulSoup(xml, 'xml')
-    content = soup('OAI-PMH')
-
-    # save file
-    with open(os.getcwd()+"/Files/File_"+id+".txt", 'w') as f:
-        f.write(str(content))
 
 
 # define function: append information to json file
@@ -179,6 +186,7 @@ def write_json(new_data, filename='stations.json'):
         # convert back to json.
         json.dump(file_data, file, indent = 4)
 
+
 # define function: find necessary information and create data frame
 
 def get_deployments_station(WIGOS_ID):
@@ -192,115 +200,99 @@ def get_deployments_station(WIGOS_ID):
         df_station (data frame): data frame with the required information (start and end dates of deployments, establishment date, etc.)
     """
 
-    id = WIGOS_ID
-    # print(id)
+    ## set wmdr xml file location
+    record_file = os.getcwd()+"/Files/file.xml"
+    url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + WIGOS_ID
 
-    # get xml for the station
-    get_xml_info(id)
+    response = requests.get(url)
+    soup= BeautifulSoup(response.content,"xml")
 
-    # get variables at a station
-    url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + str(id)
-    url = url.replace(" ", "%20")
-    xml = urlopen(url).read()
-    soup = BeautifulSoup(xml, 'xml')
+    with open(record_file, 'w') as f:
+        f.write(soup.prettify())
 
-    # Establishment date of station
-    dateEstablished = soup.find_all('dateEstablished')
+    tree = ET.parse(record_file)
+    root = tree.getroot()
+
+    # namespaces
+    ns = {
+        "gml": "http://www.opengis.net/gml/3.2",
+        "xlink": "http://www.w3.org/1999/xlink",
+        "wmdr": "http://def.wmo.int/wmdr/2017",
+        "gco": "http://www.isotc211.org/2005/gco",
+        "gmd": "http://www.isotc211.org/2005/gmd",
+        "ns6": "http://def.wmo.int/opm/2013",
+        "ns7": "http://def.wmo.int/metce/2013",
+        "om": "http://www.opengis.net/om/2.0",
+        "ns9": "http://www.isotc211.org/2005/gts",
+        "sam": "http://www.opengis.net/sampling/2.0",
+        "sams": "http://www.opengis.net/samplingSpatial/2.0",
+        "xsi": "http://www.w3.org/2001/XMLSchema-instance"
+    }
+
+    # date of establishment
+    dateEstablished = root.find(".//wmdr:facility/wmdr:ObservingFacility/wmdr:dateEstablished", ns).text
     if dateEstablished:
-        dateEstablished = re.findall(r'\d{4}-\d{2}-\d{2}',str(dateEstablished))[0]
+        dateEstablished = datetime.strptime(dateEstablished.strip(), '%Y-%m-%dZ')
     else:
         dateEstablished = "unknown"
 
-    # find observed properties
-    observedProperties = []
-    with open(os.getcwd()+'/Files/File_'+id+'.txt') as myFile:
-        observedProperties_line = soup.find_all('observedProperty')
-        observedProperties_notation = re.findall(r'\d+',str(observedProperties_line))
-        observedProperties.append(observedProperties_notation)
+    # find observing capabilities in xml file
+    results = list()
+    capabilities = root.findall(".//wmdr:ObservingCapability", ns)
+    for capability in capabilities:
+        observations = capability.findall(".//wmdr:observation", ns)
+        for observation in observations:
+            # find observed property
+            observedProperty = observation.find(".//om:OM_Observation/om:observedProperty", ns).attrib["{http://www.w3.org/1999/xlink}href"]
+            # get notation of observed property
+            observedProperty_notation = int(observedProperty.split('/')[-1])
 
-    # list of unique observed properties
-    def unique(list1):
-        ans = reduce(lambda re, x: re+[x] if x not in re else re, list1, [])
-        return(ans)
-    variables_u = unique(observedProperties[0])
 
-    # open file
-    f=open(os.getcwd()+'/Files/File_'+id+'.txt')
-    lines=f.readlines()
-    all_dates = []
+            beginPosition_element = observation.find(".//om:OM_Observation/om:procedure/wmdr:Process/wmdr:deployment/wmdr:Deployment/wmdr:validPeriod/gml:TimePeriod/gml:beginPosition", ns)
+            if beginPosition_element is not None:
+                try:
+                    beginPosition_text = beginPosition_element.text
+                    # Convert to Pandas datetime
+                    beginPosition = pd.to_datetime(beginPosition_text.strip(), format='%Y-%m-%dT%H:%M:%SZ')
+                except Exception as e:
+                    # print("Error converting beginPosition:", e)
+                    beginPosition = np.nan
+            else:
+                beginPosition = np.nan
 
-    # prepare data frame
-    df_station = pd.DataFrame(np.nan, index=[0],columns=["beginPosition", "endPosition", "station", "dateEstablished", "variable"])
+            # find potential ending of deployment
+            endPosition_element = observation.find(".//om:OM_Observation/om:procedure/wmdr:Process/wmdr:deployment/wmdr:Deployment/wmdr:validPeriod/gml:TimePeriod/gml:endPosition", ns)
+            if endPosition_element is not None:
+                try:
+                    endPosition_text = endPosition_element.text
+                    endPosition = pd.to_datetime(endPosition_text.strip(), format='%Y-%m-%dT%H:%M:%SZ')
+                except Exception as e:
+                    endPosition = pd.Timestamp.today().strftime("%Y-%m-%d")
+            else: # if no ending: today
+                endPosition = pd.Timestamp.today().strftime("%Y-%m-%d")
 
-    # go through every observed variable
-    for var in variables_u:
+            results.append({
+                "variable": observedProperty_notation,
+                "beginPosition": beginPosition,
+                "endPosition": endPosition
+            })
 
-        # find line numbers containing the WMDR notation of the observed property
-        numbers = []
-
-        with open(os.getcwd()+'/Files/File_'+id+'.txt') as myFile:
-            for num, line in enumerate(myFile, 1):
-                if var in line:
-                    numbers.append(num)
-
-        # find the line numbers with <om:observedProperty
-        obs = "observedProperty"
-        numbers_obs = []
-
-        for n in numbers:
-            if obs in lines[n-1]:
-                number = re.findall(r'\d+',lines[n-1])
-                if number[0]==str(var):
-                    numbers_obs.append(n)
-
-        # read 50 lines before "observedProperty" line to get "beginPosition" (& "endPosition")
-        for n in numbers_obs:
-            start = "beginPosition"
-            end = "endPosition"
-            line_numbers = range(n-50,n)
-
-            f=open(os.getcwd()+'/Files/File_'+id+'.txt')
-            lines=f.readlines()
-            positions = []
-
-            for n in line_numbers:
-                if start in lines[n]:
-                    beginning = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
-                    if beginning:
-                        pd.to_datetime(beginning, format='%Y-%m-%d')
-                        positions.append(beginning[0])
-                    else:
-                        positions.append(np.nan)
-
-                elif end in lines[n]:
-                    ending = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
-                    if ending:
-                        pd.to_datetime(ending, format='%Y-%m-%d')
-                        positions.append(ending[0])
-                    else: # if no ending: today
-                        positions.append(pd.Timestamp.today().strftime("%Y-%m-%d"))
-
-            beginPosition  = positions[0]
-            endPosition = positions[1]
-            # fill new row to data frame
-            new_row = {"beginPosition":beginPosition,"endPosition":endPosition,"station":id, "dateEstablished":dateEstablished, "variable":var}
-            df_station.loc[len(df_station)] = new_row
-
-    # delete row zero from data frame
-    df_station.drop([0], axis=0, inplace=True)
+    # create data frame
+    df_station = pd.DataFrame(results)
 
     # get names of variables through dictionary
-    with open(os.getcwd()+'/WMDR_dictionaries/'+'T_GO_VARIABLE_REF_dictionary.json') as f:
+    with open(os.getcwd()+'/WMDR_dictionaries/T_GO_VARIABLE_REF_dictionary.json') as f:
         dictionary = json.loads(f.read())
-    variables = df_station["variable"]
-    df_station["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(vari))]) for vari in variables]
+        variables = df_station["variable"]
+        df_station["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(vari))]) for vari in variables]
 
-    # print data frame
-    # print(df_station)
+    df_station["station"] = WIGOS_ID
+    df_station["dateEstablished"] = dateEstablished
+
+    variables_u = df_station["variable"].unique().tolist()
+
+
     return df_station, variables_u
-
-
-
 
 
 # define function: find necessary information and create data frame
@@ -324,76 +316,75 @@ def get_information_date_verification(country):
 
     # go through each station xml and append the information to the data frame
     for id in wigosIds:
-        # print(id)
-        get_xml_info(id)
 
-        # open xml
-        observedProperties = []
-        url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + str(id)
-        xml = urlopen(url).read()
-        soup = BeautifulSoup(xml, 'xml')
+        # set wmdr xml file location
+        record_file = os.getcwd()+"/Files/file.xml"
+        url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
 
+        response = requests.get(url)
+        soup= BeautifulSoup(response.content,"xml")
 
-        # find establishment date of station
-        dateEstablished = soup.find_all('dateEstablished')
+        with open(record_file, 'w') as f:
+            f.write(soup.prettify())
+
+        tree = ET.parse(record_file)
+        root = tree.getroot()
+
+        # namespaces
+        ns = {
+            "gml": "http://www.opengis.net/gml/3.2",
+            "xlink": "http://www.w3.org/1999/xlink",
+            "wmdr": "http://def.wmo.int/wmdr/2017",
+            "gco": "http://www.isotc211.org/2005/gco",
+            "gmd": "http://www.isotc211.org/2005/gmd",
+            "ns6": "http://def.wmo.int/opm/2013",
+            "ns7": "http://def.wmo.int/metce/2013",
+            "om": "http://www.opengis.net/om/2.0",
+            "ns9": "http://www.isotc211.org/2005/gts",
+            "sam": "http://www.opengis.net/sampling/2.0",
+            "sams": "http://www.opengis.net/samplingSpatial/2.0",
+            "xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+
+        # date of establishment
+        dateEstablished = root.find(".//wmdr:facility/wmdr:ObservingFacility/wmdr:dateEstablished", ns).text
         if dateEstablished:
-            dateEstablished = re.findall(r'\d{4}-\d{2}-\d{2}',str(dateEstablished))[0]
+            dateEstablished = datetime.strptime(dateEstablished.strip(), '%Y-%m-%dZ')
         else:
             dateEstablished = "unknown"
 
-        # find observed properties
-        with open(os.getcwd()+"/Files/File_"+id+".txt") as myFile:
-            observedProperties_line = soup.find_all('observedProperty')
-            observedProperties_notation = re.findall(r'\d+',str(observedProperties_line))
-            observedProperties.append(observedProperties_notation)
+        # find observing capabilities in xml file
+        results = list()
+        capabilities = root.findall(".//wmdr:ObservingCapability", ns)
+        for capability in capabilities:
+            observations = capability.findall(".//wmdr:observation", ns)
+            for observation in observations:
+                # find observed property
+                observedProperty = observation.find(".//om:OM_Observation/om:observedProperty", ns).attrib["{http://www.w3.org/1999/xlink}href"]
+                # get notation of observed property
+                observedProperty_notation = int(observedProperty.split('/')[-1])
 
-        #  list of unique observed properties
-        def unique(list1):
-            ans = reduce(lambda re, x: re+[x] if x not in re else re, list1, [])
-            return(ans)
-        variables_u = unique(observedProperties[0])
 
-        f=open(os.getcwd()+'/Files/File_'+id+'.txt')
-        lines=f.readlines()
+                beginPosition_element = observation.find(".//om:OM_Observation/om:procedure/wmdr:Process/wmdr:deployment/wmdr:Deployment/wmdr:validPeriod/gml:TimePeriod/gml:beginPosition", ns)
+                if beginPosition_element is not None:
+                    try:
+                        beginPosition_text = beginPosition_element.text
+                        # Convert to Pandas datetime
+                        beginPosition = pd.to_datetime(beginPosition_text.strip(), format='%Y-%m-%dT%H:%M:%SZ')
+                    except Exception as e:
+                        beginPosition = np.nan
+                else:
+                    beginPosition = np.nan
 
-        # find deployment start for every measured variable
-        positions = []
-        for var in variables_u:
-            variable = var
+                results.append({
+                    "variable": observedProperty_notation,
+                    "beginPosition": beginPosition,
+                })
 
-            # find line numbers containing the WMDR notation of the observed property
-            numbers = []
-
-            with open(os.getcwd()+'/Files/File_'+id+'.txt') as myFile:
-                for num, line in enumerate(myFile, 1):
-                    if variable in line:
-                        numbers.append(num)
-
-            # find the line numbers with <om:observedProperty
-            obs = "observedProperty"
-            numbers_obs = []
-
-            for n in numbers:
-                if obs in lines[n-1]:
-                    number = re.findall(r'\d+',lines[n-1])
-                    if number[0]==str(var):
-                        numbers_obs.append(n)
-
-            # read 30 lines before "observedProperty" line to get "beginPosition"
-            for n in numbers_obs:
-                start = "beginPosition"
-                line_numbers = range(n-30,n)
-                for n in line_numbers:
-                    if start in lines[n]:
-                        beginning = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
-                        if beginning:
-                            pd.to_datetime(beginning, format='%Y-%m-%d')
-                            positions.append(beginning[0])
-                        else:
-                            positions.append(np.nan)
-
+        # create data frame
+        df_station = pd.DataFrame(results)
         # find first date
-        pos = pd.to_datetime(positions, format='%Y-%m-%d')
+        pos = pd.to_datetime(df_station["beginPosition"], format='%Y-%m-%d')
         firstDeploymentStart = pd.Series(pos).min()
 
         # write data in data frame
@@ -404,6 +395,7 @@ def get_information_date_verification(country):
 
     return df_dates
 
+# define function: find necessary information and create data frame
 
 def get_deployments_variable_country(country, variable):
 
@@ -411,108 +403,104 @@ def get_deployments_variable_country(country, variable):
 
         Parameters:
         country (str): country of interest, e.g. "KEN"
-        variable (str): notation of variable according to WMDR (e.g. 224 for Air temperature)
+        variable (int): notation of variable according to WMDR (e.g. 224 for Air temperature)
 
         Returns:
         df_variable: data frame including all deployments of all stations measuring the variable in the country
     """
 
     # prepare data frame
-    df_variable = pd.DataFrame(np.nan, index=[0],columns=["beginPosition", "endPosition", "station", "variable"])
+    df_variable = pd.DataFrame()
 
     # get WIGOS IDs
     wigosIds = get_WIGOS_ID_country(country)
 
     for id in wigosIds:
-        # print(id)
 
-        # open xml
-        observedProperties = []
+        # prepare data frame
+        df_station = pd.DataFrame(np.nan, index=[0],columns=["station", "beginPosition", "endPosition", "variable"])
+
+        # set wmdr xml file location
+        record_file = os.getcwd()+"/Files/file.xml"
         url = "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=%20" + id
-        xml = urlopen(url).read()
-        soup = BeautifulSoup(xml, 'xml')
 
-        # find observed properties
-        with open(os.getcwd()+"/Files/File_"+id+".txt") as myFile:
-            observedProperties_line = soup.find_all('observedProperty')
-            observedProperties_notation = re.findall(r'\d+',str(observedProperties_line))
-            observedProperties.append(observedProperties_notation)
+        response = requests.get(url)
+        soup= BeautifulSoup(response.content,"xml")
 
-        # check if variable of interest is measured at the station
-        if str(variable) in observedProperties[0]:
-            station = id
-            # find line numbers containing the WMDR number of the observed property
-            numbers = []
+        with open(record_file, 'w') as f:
+            f.write(soup.prettify())
 
-            with open(os.getcwd()+'/Files/File_'+id+'.txt') as myFile:
-                for num, line in enumerate(myFile, 1):
-                    if variable in line:
-                        numbers.append(num)
+        tree = ET.parse(record_file)
+        root = tree.getroot()
 
-            # find the line numbers with <om:observedProperty
-            obs = "observedProperty"
-            numbers_obs = []
-            # get line numbers containing variable
-            f=open(os.getcwd()+"/Files/File_"+id+".txt")
-            lines=f.readlines()
-            for n in numbers:
-                if obs in lines[n-1]:
-                    number = re.findall(r'\d+',lines[n-1])
-                    if number[0]==str(variable):
-                        numbers_obs.append(n)
+        # namespaces
+        ns = {
+            "gml": "http://www.opengis.net/gml/3.2",
+            "xlink": "http://www.w3.org/1999/xlink",
+            "wmdr": "http://def.wmo.int/wmdr/2017",
+            "gco": "http://www.isotc211.org/2005/gco",
+            "gmd": "http://www.isotc211.org/2005/gmd",
+            "ns6": "http://def.wmo.int/opm/2013",
+            "ns7": "http://def.wmo.int/metce/2013",
+            "om": "http://www.opengis.net/om/2.0",
+            "ns9": "http://www.isotc211.org/2005/gts",
+            "sam": "http://www.opengis.net/sampling/2.0",
+            "sams": "http://www.opengis.net/samplingSpatial/2.0",
+            "xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
 
-            # read 50 lines before "observedProperty" line to get "beginPosition" (& "endPosition")
-            for n in numbers_obs:
-                start = "beginPosition"
-                end = "endPosition"
-                line_numbers = range(n-50,n)
+        results = list()
 
-                f=open(os.getcwd()+'/Files/File_'+id+'.txt')
-                lines=f.readlines()
-                positions = []
-                for n in line_numbers:
-                    if start in lines[n]:
-                        beginning = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
-                        if beginning:
-                            pd.to_datetime(beginning, format='%Y-%m-%d')
-                            positions.append(beginning[0])
-                        else:
-                            positions.append(np.nan)
+        # find observing capabilities in xml file
+        capabilities = root.findall(".//wmdr:ObservingCapability", ns)
+        for capability in capabilities:
+            observations = capability.findall(".//wmdr:observation", ns)
+            for observation in observations:
+                # find observed property
+                observedProperty = observation.find(".//om:OM_Observation/om:observedProperty", ns).attrib["{http://www.w3.org/1999/xlink}href"]
+                # get notation of observed property
+                observedProperty_notation = int(observedProperty.split('/')[-1])
 
-                    elif end in lines[n]:
-                        ending = re.findall(r'\d{4}-\d{2}-\d{2}',lines[n])
-                        if ending:
-                            pd.to_datetime(ending, format='%Y-%m-%d')
-                            positions.append(ending[0])
-                        else:
-                            positions.append(pd.Timestamp.today().strftime("%Y-%m-%d"))
 
-                if not positions:
-                    beginPosition = np.nan
-                    endPosition = np.nan
+                beginPosition_element = observation.find(".//om:OM_Observation/om:procedure/wmdr:Process/wmdr:deployment/wmdr:Deployment/wmdr:validPeriod/gml:TimePeriod/gml:beginPosition", ns)
+                if beginPosition_element is not None:
+                    try:
+                        beginPosition_text = beginPosition_element.text
+                        # Convert to Pandas datetime
+                        beginPosition = pd.to_datetime(beginPosition_text.strip(), format='%Y-%m-%dT%H:%M:%SZ')
+                    except Exception as e:
+                        # print("Error converting beginPosition:", e)
+                        beginPosition = np.nan
                 else:
-                    beginPosition  = positions[0]
-                    endPosition = positions[1]
+                    beginPosition = np.nan
 
-                # write information to data frame
-                new_row = {"beginPosition":beginPosition,"endPosition":endPosition,"station":station,"variable":variable}
-                df_variable.loc[len(df_variable)] = new_row
+                # find potential ending of deployment
+                endPosition_element = observation.find(".//om:OM_Observation/om:procedure/wmdr:Process/wmdr:deployment/wmdr:Deployment/wmdr:validPeriod/gml:TimePeriod/gml:endPosition", ns)
+                if endPosition_element is not None:
+                    try:
+                        endPosition_text = endPosition_element.text
+                        endPosition = pd.to_datetime(endPosition_text.strip(), format='%Y-%m-%dT%H:%M:%SZ')
+                    except Exception as e:
+                        endPosition = pd.Timestamp.today().strftime("%Y-%m-%d")
+                else: # if no ending: today
+                    endPosition = pd.Timestamp.today().strftime("%Y-%m-%d")
 
-        # if variable not measured at station
-        else:
-            station = id
-            new_row = {"beginPosition":np.nan,"endPosition":np.nan,"station":station,"variable":variable}
-            df_variable.loc[len(df_variable)] = new_row
+                results.append({
+                    "station": id,
+                    "beginPosition": beginPosition,
+                    "endPosition": endPosition,
+                    "variable": observedProperty_notation
+                })
 
+        # create data frame
+        df_station = pd.DataFrame(results)
+        subset_df = df_station.loc[df_station["variable"] == variable]
+        df_variable = pd.concat([df_variable, subset_df], ignore_index=True)
 
-    df_variable.drop([0], axis=0, inplace=True)
-
-
-    # get name of variable
-    with open(os.getcwd()+'/WMDR_dictionaries/'+'T_GO_VARIABLE_REF_dictionary.json') as f:
-        dictionary = json.loads(f.read())
-    variables = df_variable["variable"]
-    df_variable["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(vari))]) for vari in variables]
-
+        # get name of variable
+        with open(os.getcwd()+"/WMDR_dictionaries/T_GO_VARIABLE_REF_dictionary.json") as f:
+            dictionary = json.loads(f.read())
+        variables = df_variable["variable"]
+        df_variable["variables_names"] = [(list(dictionary.keys())[list(dictionary.values()).index(str(vari))]) for vari in variables]
 
     return df_variable, wigosIds

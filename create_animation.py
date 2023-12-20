@@ -33,6 +33,8 @@ def animation_establishment(json_file, background = True):
     f = open(json_file)
     data = json.load(f)
     df_animation = pd.DataFrame(data["stations"])
+    df_animation['dateEstablished'] = pd.to_datetime(df_animation['dateEstablished'], format='%Y-%m-%dZ')
+    df_animation['dateClosed'] = pd.to_datetime(df_animation['dateClosed'], format='%Y-%m-%dZ')
 
     # for legend
     def legend_without_duplicate_labels(figure):
@@ -57,13 +59,13 @@ def animation_establishment(json_file, background = True):
 
     # define animation
     def animate(year):
-        df = df_animation[(pd.DatetimeIndex(df_animation["dateEstablished"]).year == year)]
-        m.scatter(df["lon"], df["lat"], latlon=True, c="blue",s=30,marker="*", label = "established")
+        # blue star when station is established
+        df_est = df_animation[(pd.DatetimeIndex(df_animation["dateEstablished"]).year == year)]
+        m.scatter(df_est["lon"], df_est["lat"], latlon=True, c="blue",s=30,marker="*", label = "established")
 
-        # station closed:
-        for i in range(0,len(df["dateClosed"])):
-            if not df.iloc[i]["dateClosed"] == "NA":
-                m.scatter(df.iloc[i]["lon"], df.iloc[i]["lat"], latlon=True, c="red",s=30,marker="*", label = "closed")
+        # red star when station is closed
+        df_closed = df_animation[(pd.DatetimeIndex(df_animation["dateClosed"]).year == year)]
+        m.scatter(df_closed["lon"], df_closed["lat"], latlon=True, c="red",s=30,marker="*", label = "closed")
 
         # legend & year
         legend_without_duplicate_labels(plt)
