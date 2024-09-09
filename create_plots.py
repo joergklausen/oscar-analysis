@@ -26,7 +26,7 @@ from collections import OrderedDict
 
 # define function: create plot showing a map with all catalogued stations (color of dots according to reporting status)
 
-def plot_overview_map(json_file, reporting = True):
+def plot_overview_map(df: pd.DataFrame, reporting: bool=True):
 
     """ create a plot showing a spatial map with dots for the catalogued stations (color of dots according to reporting status)
 
@@ -49,9 +49,10 @@ def plot_overview_map(json_file, reporting = True):
     m.drawcountries(color='black', linewidth=2)
 
     # load data
-    f = open(json_file)
-    data = json.load(f)
-    df = pd.DataFrame(data["stations"])
+    # f = open(json_file)
+    # data = json.load(f)
+    # # df = pd.DataFrame(data["stations"])
+    # df = pd.DataFrame(data)
 
     # color according to reporting status
     colors = {'operational':'tab:blue', 'preOperational':'tab:purple', 'unknown':'tab:grey', 'closed':'tab:red', 'nonReporting':'tab:orange'}
